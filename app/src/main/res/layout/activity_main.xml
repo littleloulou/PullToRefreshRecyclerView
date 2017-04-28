@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.lph.pulltorefreshrecyclerview.MainActivity">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="5dp"
+        android:onClick="linearLayout"
+        android:textAllCaps="false"
+        android:text="LinearLayout"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="5dp"
+        android:onClick="gridLayout"
+        android:textAllCaps="false"
+        android:text="gridLayout"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="5dp"
+        android:onClick="staggerLayout"
+        android:textAllCaps="false"
+        android:text="staggerLayout"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="5dp"
+        android:onClick="noRefresh"
+        android:textAllCaps="false"
+        android:text="noRefresh"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="5dp"
+        android:onClick="noLoadMore"
+        android:textAllCaps="false"
+        android:text="noLoadMore"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="5dp"
+        android:onClick="normal"
+        android:textAllCaps="false"
+        android:text="normal"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+</LinearLayout>
