@@ -1,4 +1,4 @@
-package com.lph.pulltorefreshrecyclerview.widget;
+package com.lph.pulltorefreshrecyclerlib.widget;
 
 import android.content.Context;
 import android.os.Build;
@@ -9,7 +9,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.lph.pulltorefreshrecyclerview.R;
+import com.lph.pulltorefreshrecyclerlib.R;
+
 
 /**
  * Created by lph on 2017/4/28.

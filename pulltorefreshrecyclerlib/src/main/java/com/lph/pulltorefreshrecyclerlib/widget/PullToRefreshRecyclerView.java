@@ -1,4 +1,4 @@
-package com.lph.pulltorefreshrecyclerview.widget;
+package com.lph.pulltorefreshrecyclerlib.widget;
 
 import android.content.Context;
 import android.support.v4.view.ViewCompat;
@@ -12,7 +12,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.lph.pulltorefreshrecyclerview.R;
+import com.lph.pulltorefreshrecyclerlib.R;
+
 
 /**
  * Created by lph on 2017/4/15.

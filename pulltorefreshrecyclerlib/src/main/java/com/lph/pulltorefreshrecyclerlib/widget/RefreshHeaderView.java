@@ -1,4 +1,4 @@
-package com.lph.pulltorefreshrecyclerview.widget;
+package com.lph.pulltorefreshrecyclerlib.widget;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -14,7 +14,7 @@ import android.view.animation.RotateAnimation;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.lph.pulltorefreshrecyclerview.R;
+import com.lph.pulltorefreshrecyclerlib.R;
 
 
 /**

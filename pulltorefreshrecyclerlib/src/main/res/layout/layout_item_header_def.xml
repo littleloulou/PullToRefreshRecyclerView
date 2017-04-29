@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.lph.pulltorefreshrecyclerview.widget.RefreshHeaderView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.lph.pulltorefreshrecyclerlib.widget.RefreshHeaderView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="0dp"
     android:gravity="bottom"
@@ -10,7 +10,6 @@
         android:layout_height="30dp"
         android:layout_marginBottom="10dp"
         android:layout_marginTop="10dp">
-
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -44,4 +43,4 @@
             android:textSize="18sp" />
     </RelativeLayout>
 
-</com.lph.pulltorefreshrecyclerview.widget.RefreshHeaderView>
+</com.lph.pulltorefreshrecyclerlib.widget.RefreshHeaderView>

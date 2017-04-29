@@ -4,11 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.lph.pulltorefreshrecyclerview.example.LinearLayoutActivity">
-    <com.lph.pulltorefreshrecyclerview.widget.PullToRefreshRecyclerView
+    <com.lph.pulltorefreshrecyclerlib.widget.PullToRefreshRecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="none"
         android:overScrollMode="never"
-        />
+        android:scrollbars="none" />
 </RelativeLayout>

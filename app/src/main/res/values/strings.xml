@@ -1,12 +1,5 @@
 <resources>
     <string name="app_name">PullToRefreshRecyclerView</string>
-    <string name="is_loading_more">正在加载更多...</string>
-    <string name="release_to_refresh">释放立即刷新</string>
-    <string name="pull_to_refresh">下拉刷新</string>
-    <string name="refreshing">正在刷新</string>
-    <string name="refresh_complete">刷新完成</string>
-    <string name="refresh_failure">刷新失败</string>
-    <string name="empty">empty</string>
     <string name="clear_data">清空数据</string>
     <string name="add">添加一条数据</string>
     <string name="add_more">添加10条数据</string>
