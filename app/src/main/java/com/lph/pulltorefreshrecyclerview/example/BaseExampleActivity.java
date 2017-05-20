@@ -53,6 +53,50 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         mRecyclerView.setAdapter(mAdapter);
     }
 
+    @Override
+    public void onLoadMore() {
+        mRecyclerView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mDatas.size() > 60) {
+                    mRecyclerView.onLoadCompleted(false);
+                    return;
+                }
+                for (int i = 0; i < 10; i++) {
+                    mDatas.add("loadMore" + i);
+                }
+                mRecyclerView.onLoadCompleted(true);
+                mAdapter.notifyDataSetChanged();
+            }
+        }, 1000);
+    }
+
+    @Override
+    public void onRefresh() {
+        mRecyclerView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                for (int i = 0; i < mDatas.size(); i++) {
+                    mDatas.set(i, "Item refresh  " + getDateString());
+                }
+                mRecyclerView.onRefreshComplete(true);
+                mAdapter.notifyDataSetChanged();
+            }
+        }, 1000);
+    }
+
+    @Override
+    public void onItemClickListener(View view, int position) {
+        Toast.makeText(view.getContext(), "onClick" + mDatas.get(position), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onItemLongClickListener(View view, int position) {
+        Toast.makeText(view.getContext(), "onLongClick" + mDatas.get(position), Toast.LENGTH_SHORT).show();
+        return true;
+    }
+
     protected abstract RecyclerView.LayoutManager getLayoutManagerManager();
 
 
@@ -101,49 +145,6 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         return new ExampleVH(view);
     }
 
-    @Override
-    public void onLoadMore() {
-        mRecyclerView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (mDatas.size() > 60) {
-                    mRecyclerView.onLoadCompleted(false);
-                    return;
-                }
-                for (int i = 0; i < 10; i++) {
-                    mDatas.add("loadMore" + i);
-                }
-                mRecyclerView.onLoadCompleted(true);
-                mAdapter.notifyDataSetChanged();
-            }
-        }, 1000);
-    }
-
-    @Override
-    public void onRefresh() {
-        mRecyclerView.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-                for (int i = 0; i < mDatas.size(); i++) {
-                    mDatas.set(i, "Item refresh  " + getDateString());
-                }
-                mRecyclerView.onRefreshComplete(true);
-                mAdapter.notifyDataSetChanged();
-            }
-        }, 1000);
-    }
-
-    @Override
-    public void onItemClickListener(View view, int position) {
-        Toast.makeText(view.getContext(), "onClick" + mDatas.get(position), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public boolean onItemLongClickListener(View view, int position) {
-        Toast.makeText(view.getContext(), "onLongClick" + mDatas.get(position), Toast.LENGTH_SHORT).show();
-        return true;
-    }
 
 
     @Override
