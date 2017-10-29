@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.lph.pulltorefreshrecyclerlib.widget.InterceptOnTouchEventHeaderView;
+import com.lph.pulltorefreshrecyclerlib.widget.Logger;
 import com.lph.pulltorefreshrecyclerlib.widget.PullToRefreshRecyclerView;
 import com.lph.pulltorefreshrecyclerlib.widget.RefreshHeaderView;
 import com.lph.pulltorefreshrecyclerview.R;
@@ -26,12 +28,13 @@ import java.util.Locale;
  * Created by lph on 2017/4/27.
  */
 
-public abstract class BaseExampleActivity extends AppCompatActivity implements PullToRefreshRecyclerView.LoadMoreListener, RefreshHeaderView.OnRefreshListener, PullToRefreshRecyclerView.onItemOperateListenerUser {
+public abstract class BaseExampleActivity extends AppCompatActivity implements PullToRefreshRecyclerView.LoadMoreListener, RefreshHeaderView.OnRefreshListener, PullToRefreshRecyclerView.onItemOperateListenerUser, View.OnClickListener {
     private SimpleDateFormat simpleDateFormat;
     protected PullToRefreshRecyclerView mRecyclerView;
     protected RecyclerView.LayoutManager mLayoutManager;
     protected List<String> mDatas = new ArrayList<>();
     protected LinearLayoutActivity.ExampleAdapter mAdapter;
+    private View mHeader;
 
 
     @Override
@@ -44,13 +47,30 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
     private void initView() {
         setContentView(R.layout.activity_example_base_layout);
         mRecyclerView = ((PullToRefreshRecyclerView) findViewById(R.id.recyclerView));
+        //添加headerview
         mRecyclerView.setOnRefreshListener(this);
         mRecyclerView.setLoadMoreListener(this);
         mRecyclerView.setOnItemOperateListenerUser(this);
         mAdapter = new ExampleAdapter();
         mLayoutManager = getLayoutManagerManager();
         mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setIsRefreshHeaderViewFirst(false);
+        addHeader();
         mRecyclerView.setAdapter(mAdapter);
+    }
+
+    /**
+     * 添加出了刷新的headervie之外的header
+     */
+    protected void addHeader() {
+        mHeader = LayoutInflater.from(this).inflate(R.layout.layout_header_first, mRecyclerView, false);
+        mHeader.findViewById(R.id.iv_add).setOnClickListener(this);
+        mHeader.findViewById(R.id.iv_sub).setOnClickListener(this);
+        if (mRecyclerView.isIsRefreshHeaderViewFirst()) {
+            index = 1;
+        }
+        mRecyclerView.addHeader(mHeader, index);
+
     }
 
     @Override
@@ -76,14 +96,13 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         mRecyclerView.postDelayed(new Runnable() {
             @Override
             public void run() {
-
                 for (int i = 0; i < mDatas.size(); i++) {
                     mDatas.set(i, "Item refresh  " + getDateString());
                 }
                 mRecyclerView.onRefreshComplete(true);
                 mAdapter.notifyDataSetChanged();
             }
-        }, 1000);
+        }, 2000);
     }
 
     @Override
@@ -115,6 +134,25 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         return simpleDateFormat.format(new Date());
     }
 
+    int index = 0;
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.iv_add:
+                mHeader = LayoutInflater.from(this).inflate(R.layout.layout_header_first, mRecyclerView, false);
+                mHeader.findViewById(R.id.iv_add).setOnClickListener(this);
+                mHeader.findViewById(R.id.iv_sub).setOnClickListener(this);
+                mRecyclerView.addHeader(mHeader, ++index);
+                break;
+            case R.id.iv_sub:
+                mRecyclerView.removeHeader(index);
+                index--;
+                Logger.d("index:" + index);
+                break;
+        }
+    }
+
     class ExampleAdapter extends RecyclerView.Adapter<ExampleVH> {
         @Override
         public ExampleVH onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -144,7 +182,6 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_item_example, parent, false);
         return new ExampleVH(view);
     }
-
 
 
     @Override

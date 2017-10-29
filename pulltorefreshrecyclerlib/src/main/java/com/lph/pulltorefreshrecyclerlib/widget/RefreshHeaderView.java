@@ -63,6 +63,9 @@ public class RefreshHeaderView extends LinearLayout {
      * @param deltaY 移动的高度差
      */
     public void updateHeight(float deltaY) {
+        if (mCurrentState == State.REFRSHING) {
+            return;
+        }
         ViewGroup.LayoutParams layoutParams = getLayoutParams();
         mCurrentHeight = mCurrentHeight + deltaY / 2;
         mCurrentHeight = mCurrentHeight > mMaxHeight ? mMaxHeight : mCurrentHeight;
@@ -78,7 +81,7 @@ public class RefreshHeaderView extends LinearLayout {
     private void updateState() {
         int ivHeight = mIvArrow.getHeight();
         int ivWidth = mIvArrow.getWidth();
-        if (getBottom() > mChangeHeight) {
+        if (getHeight() > mChangeHeight) {
             if (mCurrentState != State.RELEASE_TO_REFRESH && mCurrentState != State.REFRSHING && mCurrentState != State.REFRESH_COMPLETE) {
                 RotateAnimation rotateAnimation = new RotateAnimation(0, -180, ivHeight / 2, ivWidth / 2);
                 rotateAnimation.setDuration(500);
@@ -97,6 +100,10 @@ public class RefreshHeaderView extends LinearLayout {
                 mCurrentState = State.PULL_TO_REFRESH;
             }
         }
+
+        if (getHeight() == 0) {
+            mCurrentState = State.NO_STATE;
+        }
     }
 
     @Override
@@ -108,7 +115,7 @@ public class RefreshHeaderView extends LinearLayout {
     }
 
 
-    private int mCurrentState = State.PULL_TO_REFRESH;
+    private int mCurrentState = State.NO_STATE;
 
     public void showRefreshing() {
         int ivHeight = mIvArrow.getHeight();
@@ -172,8 +179,8 @@ public class RefreshHeaderView extends LinearLayout {
                                 mOnRefreshListener.onRefresh();
                             }
                         } else {
-                            if (mCurrentState != State.PULL_TO_REFRESH) {
-                                mCurrentState = State.PULL_TO_REFRESH;
+                            if (mCurrentState != State.NO_STATE) {
+                                mCurrentState = State.NO_STATE;
                                 mPb.setVisibility(GONE);
                                 mIvArrow.setVisibility(VISIBLE);
                                 mTvStatue.setText(R.string.pull_to_refresh);
@@ -190,9 +197,22 @@ public class RefreshHeaderView extends LinearLayout {
     }
 
     /**
+     * 是否应该执刷新操作
+     *
+     * @param mIsRefreshEnable     是否开启了刷新
+     * @param firstVisiblePosition 第一个可见view的位置
+     * @return 是否刷新
+     */
+    public boolean shouldRefresh(boolean mIsRefreshEnable, int firstVisiblePosition) {
+        return mIsRefreshEnable && (firstVisiblePosition == 0 || (firstVisiblePosition == 1 && mCurrentState != State.NO_STATE));
+    }
+
+    /**
      * 刷新状态
      */
     public interface State {
+        //没有进行过刷新
+        int NO_STATE = -1;
         //下拉刷新
         int PULL_TO_REFRESH = 0;
         //释放刷新
@@ -249,5 +269,9 @@ public class RefreshHeaderView extends LinearLayout {
     public static int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dipValue * scale + 0.5f);
+    }
+
+    public boolean shouldDisableRecyclerViewScroll() {
+        return mCurrentState != State.NO_STATE;
     }
 }

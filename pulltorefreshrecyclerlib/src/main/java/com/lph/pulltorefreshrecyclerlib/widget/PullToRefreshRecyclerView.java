@@ -14,13 +14,17 @@ import android.view.ViewGroup;
 
 import com.lph.pulltorefreshrecyclerlib.R;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 
 /**
  * Created by lph on 2017/4/15.
  */
 public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHeaderView.OnRefreshListener {
 
-    private static final int TYPE_BASE = 8888;
+    private static final int TYPE_BASE = 8888 * 6;
     /**
      * item 类型
      */
@@ -32,8 +36,12 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
 
     private boolean mIsLoadMoreEnable = true;//是否允许加载更多
     private boolean mIsRefreshEnable = true;//是否允许下拉刷新
+    private boolean mIsRefreshHeaderViewFirst = false;
     private RefreshHeaderView.OnRefreshListener mOnRefreshListener;
     private loadMoreFooterView mLoadMoreFootView;
+
+    //用来存放headerview的数量
+    private List<View> mHeaders = new LinkedList<>();
 
     public void setRefreshEnable(boolean isRefreshEnable) {
         this.mIsRefreshEnable = isRefreshEnable;
@@ -61,8 +69,50 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
 
     private void initStateView() {
         mRefreshHeaderView = ((RefreshHeaderView) LayoutInflater.from(getContext()).inflate(R.layout.layout_item_header_def, this, false));
+        //创建headerview之后，添加到保存head的容器里面
+        if (!mHeaders.contains(mRefreshHeaderView)) {
+            if (mIsRefreshHeaderViewFirst) {
+                mHeaders.add(0, mRefreshHeaderView);
+            } else {
+                //刷新的view应该是放在headerview的最后一个view
+                mHeaders.add(mHeaders.size(), mRefreshHeaderView);
+            }
+
+        }
         mLoadMoreFootView = new loadMoreFooterView(getContext());
         mRefreshHeaderView.setOnRefreshListener(this);
+    }
+
+    /**
+     * 添加出了刷新之外的头部布局
+     * 这个方法需要在setLayoutManager之后调用
+     *
+     * @param view 头部布局
+     */
+    public void addHeader(View view, int index) {
+        //如果刷新的headerview放在了第一个位置,那么别的header事不允许放在第一个位置的,需要往后偏移
+        if (mIsRefreshHeaderViewFirst && index == 0) {
+            index += 1;
+        }
+        //如果刷新的headerview放在了第一个位置，那么其余的headerview就不需要拦截recyclerview的ontouchevent中的事件了
+        if (mIsRefreshHeaderViewFirst && view instanceof InterceptOnTouchEventHeaderView) {
+            ((InterceptOnTouchEventHeaderView) view).setShouldIntercept(false);
+        }
+        mHeaders.add(index > mHeaders.size() ? mHeaders.size() : index, view);
+        if (mWrapperAdapter != null) {
+            mWrapperAdapter.notifyDataSetChanged();
+        }
+    }
+
+    public void removeHeader(int index) {
+        //第一个刷新的header是不允许删除的
+        if (mIsRefreshHeaderViewFirst && index == 0) {
+            return;
+        }
+        if (index >= 0 && index < mHeaders.size()) {
+            mHeaders.remove(index);
+            mWrapperAdapter.notifyDataSetChanged();
+        }
     }
 
     private void init() {
@@ -87,6 +137,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             }
         });
     }
+
 
     /**
      * 设置加载更多的监听
@@ -174,18 +225,33 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         };
 
         private int resetPosition(int positionStart) {
-            return mIsRefreshEnable ? positionStart + 1 : positionStart;
+            return mIsRefreshEnable ? positionStart + mHeaders.size() : positionStart + mHeaders.size() - 1;
         }
 
+
+        private int mCurrentHeaderPosition;
 
         @Override
         public int getItemViewType(int position) {
             if (mInternalAdapter.getItemCount() == 0) {
                 return TYPE_EMPTY;
             }
-            if (position == 0 && mIsRefreshEnable) {
+
+       /*     if (position == 0 && mIsRefreshEnable) {
                 return TYPE_HEADER;
             }
+          */
+
+            int otherHeadCount = mHeaders.size() - 1;
+            if (mIsRefreshEnable && position <= otherHeadCount + 1 - 1) {
+                mCurrentHeaderPosition = position;
+                return TYPE_HEADER;
+            }
+            if (!mIsRefreshEnable && position <= otherHeadCount - 1) {
+                mCurrentHeaderPosition = position;
+                return TYPE_HEADER;
+            }
+
             if (isFooter(position)) {
                 return TYPE_FOOTER;
             }
@@ -196,12 +262,16 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             return mIsLoadMoreEnable && getItemCount() - 1 == position;
         }
 
+
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             if (viewType == TYPE_FOOTER) {
                 return new FooterViewHolder(mLoadMoreFootView);
             } else if (viewType == TYPE_HEADER) {
-                return new HeaderViewHolder(mRefreshHeaderView);
+                Logger.d("mCurrentHeaderPosition" + mCurrentHeaderPosition);
+                HeaderViewHolder headerViewHolder = new HeaderViewHolder(mHeaders.get(mCurrentHeaderPosition));
+                headerViewHolder.setIsRecyclable(false);
+                return headerViewHolder;
             } else if (viewType == TYPE_EMPTY) {
                 return new EmptyViewHolder(LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.layout_item_empty_def, parent, false));
@@ -210,6 +280,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             }
         }
 
+
         class FooterViewHolder extends ViewHolder {
 
             FooterViewHolder(View itemView) {
@@ -217,7 +288,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             }
         }
 
-        class HeaderViewHolder extends ViewHolder {
+        public class HeaderViewHolder extends ViewHolder {
 
             HeaderViewHolder(View itemView) {
                 super(itemView);
@@ -235,7 +306,13 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         public void onBindViewHolder(ViewHolder holder, int position) {
             int type = getItemViewType(position);
             if (type != TYPE_FOOTER && type != TYPE_HEADER && type != TYPE_EMPTY) {
-                mInternalAdapter.onBindViewHolder(holder, mIsRefreshEnable ? position - 1 : position);
+                //对应的位置要往后偏移，如果刷新要减去刷新的和自定义的view的数目,如果没有刷新，只减去自定义的header
+                if (mIsRefreshEnable) {
+                    position = position - mHeaders.size();
+                } else {
+                    position = position - mHeaders.size() + 1;
+                }
+                mInternalAdapter.onBindViewHolder(holder, position);
             }
         }
 
@@ -273,9 +350,11 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         @Override
         public int getItemCount() {
             int count = mInternalAdapter.getItemCount();
-            if (count == 0) return 1;
+            if (count == 0) return 1; //当展示的内容为空时，需要显示一个空的item
             if (mIsLoadMoreEnable) count++;
-            if (mIsRefreshEnable) count++;
+//            if (mIsRefreshEnable) count++;
+            count += mHeaders.size(); //加上所有的头view
+            if (!mIsRefreshEnable) count--; //如果没有开启刷新,则要减掉刷新的item
             return count;
         }
 
@@ -379,7 +458,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             if (mOnItemOperateListenerUser != null) {
                 int position = getChildAdapterPosition(v);
                 if (invalidPosition(position)) return;
-                mOnItemOperateListenerUser.onItemClickListener(v, mIsRefreshEnable ? position - 1 : position);
+                mOnItemOperateListenerUser.onItemClickListener(v, mIsRefreshEnable ? position - mHeaders.size() : position - mHeaders.size() + 1);
             }
         }
 
@@ -387,7 +466,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         public boolean onLongClick(View v) {
             if (mOnItemOperateListenerUser != null) {
                 int position = getChildAdapterPosition(v);
-                return !invalidPosition(position) && mOnItemOperateListenerUser.onItemLongClickListener(v, mIsRefreshEnable ? position - 1 : position);
+                return !invalidPosition(position) && mOnItemOperateListenerUser.onItemLongClickListener(v, mIsRefreshEnable ? position - mHeaders.size() : position - mHeaders.size() + 1);
             }
             return false;
         }
@@ -440,6 +519,11 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
 
     }
 
+    @Override
+    public boolean canScrollVertically(int direction) {
+        return !mRefreshHeaderView.shouldDisableRecyclerViewScroll();
+    }
+
     private float mLastY;
     private boolean mShouldLoadMore;
 
@@ -461,6 +545,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
                 break;
             case MotionEvent.ACTION_MOVE:
                 float deltaY = e.getRawY() - mLastY;
+                Logger.d("shouldrefresh:" + shouldRefresh());
                 if (shouldRefresh()) {
                     mRefreshHeaderView.updateHeight(deltaY);
                 }
@@ -475,7 +560,9 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
     }
 
     public boolean shouldRefresh() {
-        return mIsRefreshEnable && getFirstVisiblePosition() <= 1;
+        Logger.d("getFirstVisiblePosition" + getFirstVisiblePosition());
+        return mRefreshHeaderView.shouldRefresh(mIsRefreshEnable, getFirstVisiblePosition());
+//        return mIsRefreshEnable && getFirstVisiblePosition() == 0;
     }
 
     private int getFirstVisiblePosition() {
@@ -511,4 +598,16 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         mOnRefreshListener = listener;
     }
 
+    /**
+     * 设置刷新的headview显示再recyclerview首个item的位置，还是显示在所有header最后的item位置
+     * @param mIsRefreshHeaderViewFirst
+     */
+
+    public void setIsRefreshHeaderViewFirst(boolean mIsRefreshHeaderViewFirst) {
+        this.mIsRefreshHeaderViewFirst = mIsRefreshHeaderViewFirst;
+    }
+
+    public boolean isIsRefreshHeaderViewFirst() {
+        return mIsRefreshHeaderViewFirst;
+    }
 }

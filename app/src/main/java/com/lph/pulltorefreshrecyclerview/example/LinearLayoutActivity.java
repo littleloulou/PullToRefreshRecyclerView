@@ -3,13 +3,15 @@ package com.lph.pulltorefreshrecyclerview.example;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.lph.pulltorefreshrecyclerlib.widget.layoutmanager.LinearLayoutManagerExt;
+
 
 public class LinearLayoutActivity extends BaseExampleActivity {
 
     @Override
     protected RecyclerView.LayoutManager getLayoutManagerManager() {
 
-        return new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        return new LinearLayoutManagerExt(this, LinearLayoutManager.VERTICAL, false);
     }
 
 

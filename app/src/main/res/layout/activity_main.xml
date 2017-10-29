@@ -12,8 +12,8 @@
         android:layout_gravity="center"
         android:layout_margin="5dp"
         android:onClick="linearLayout"
-        android:textAllCaps="false"
         android:text="LinearLayout"
+        android:textAllCaps="false"
         android:textColor="#000"
         android:textSize="18sp" />
 
@@ -23,8 +23,8 @@
         android:layout_gravity="center"
         android:layout_margin="5dp"
         android:onClick="gridLayout"
-        android:textAllCaps="false"
         android:text="gridLayout"
+        android:textAllCaps="false"
         android:textColor="#000"
         android:textSize="18sp" />
 
@@ -34,8 +34,8 @@
         android:layout_gravity="center"
         android:layout_margin="5dp"
         android:onClick="staggerLayout"
-        android:textAllCaps="false"
         android:text="staggerLayout"
+        android:textAllCaps="false"
         android:textColor="#000"
         android:textSize="18sp" />
 
@@ -45,8 +45,8 @@
         android:layout_gravity="center"
         android:layout_margin="5dp"
         android:onClick="noRefresh"
-        android:textAllCaps="false"
         android:text="noRefresh"
+        android:textAllCaps="false"
         android:textColor="#000"
         android:textSize="18sp" />
 
@@ -56,8 +56,8 @@
         android:layout_gravity="center"
         android:layout_margin="5dp"
         android:onClick="noLoadMore"
-        android:textAllCaps="false"
         android:text="noLoadMore"
+        android:textAllCaps="false"
         android:textColor="#000"
         android:textSize="18sp" />
 
@@ -67,8 +67,8 @@
         android:layout_gravity="center"
         android:layout_margin="5dp"
         android:onClick="normal"
-        android:textAllCaps="false"
         android:text="normal"
+        android:textAllCaps="false"
         android:textColor="#000"
         android:textSize="18sp" />
 
