@@ -9,7 +9,7 @@ import com.lph.pulltorefreshrecyclerlib.BuildConfig;
  */
 public class Logger {
     protected static final String TAG = "recyclerview";
-    public static boolean DEBUG = BuildConfig.DEBUG;
+    public static boolean DEBUG = true;
 
     private Logger() {
     }

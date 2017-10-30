@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.lph.pulltorefreshrecyclerlib.widget.InterceptOnTouchEventHeaderView;
 import com.lph.pulltorefreshrecyclerlib.widget.Logger;
 import com.lph.pulltorefreshrecyclerlib.widget.PullToRefreshRecyclerView;
 import com.lph.pulltorefreshrecyclerlib.widget.RefreshHeaderView;
@@ -51,10 +50,10 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         mRecyclerView.setOnRefreshListener(this);
         mRecyclerView.setLoadMoreListener(this);
         mRecyclerView.setOnItemOperateListenerUser(this);
+        mRecyclerView.setIsRefreshHeaderViewFirst(true);//刷新的headerview是否显示在第一个位置
         mAdapter = new ExampleAdapter();
         mLayoutManager = getLayoutManagerManager();
         mRecyclerView.setLayoutManager(mLayoutManager);
-        mRecyclerView.setIsRefreshHeaderViewFirst(false);
         addHeader();
         mRecyclerView.setAdapter(mAdapter);
     }
@@ -66,11 +65,9 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
         mHeader = LayoutInflater.from(this).inflate(R.layout.layout_header_first, mRecyclerView, false);
         mHeader.findViewById(R.id.iv_add).setOnClickListener(this);
         mHeader.findViewById(R.id.iv_sub).setOnClickListener(this);
-        if (mRecyclerView.isIsRefreshHeaderViewFirst()) {
-            index = 1;
-        }
-        mRecyclerView.addHeader(mHeader, index);
-
+        //这个方法应该在recycler setLayoutManager之后再使用,否则会出问题
+        mRecyclerView.addHeader(mHeader);
+        index++;
     }
 
     @Override
@@ -107,6 +104,9 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
 
     @Override
     public void onItemClickListener(View view, int position) {
+        if (position > mDatas.size() - 1) {
+            return;
+        }
         Toast.makeText(view.getContext(), "onClick" + mDatas.get(position), Toast.LENGTH_SHORT).show();
     }
 
@@ -143,11 +143,12 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
                 mHeader = LayoutInflater.from(this).inflate(R.layout.layout_header_first, mRecyclerView, false);
                 mHeader.findViewById(R.id.iv_add).setOnClickListener(this);
                 mHeader.findViewById(R.id.iv_sub).setOnClickListener(this);
-                mRecyclerView.addHeader(mHeader, ++index);
+                mRecyclerView.addHeader(mHeader);
+                index++;
                 break;
             case R.id.iv_sub:
-                mRecyclerView.removeHeader(index);
                 index--;
+                mRecyclerView.removeHeader(index);
                 Logger.d("index:" + index);
                 break;
         }
@@ -161,6 +162,9 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
 
         @Override
         public void onBindViewHolder(ExampleVH holder, int position) {
+            if (mDatas.size() - 1 < position) {
+                return;
+            }
             ((TextView) holder.itemView.findViewById(R.id.tv_title)).setText(mDatas.get(position));
         }
 
@@ -210,13 +214,17 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
                 mAdapter.notifyDataSetChanged();
                 break;
             case R.id.menu_delete:
-                mDatas.remove(mDatas.size() - 1);
-                mAdapter.notifyDataSetChanged();
+                if (mDatas.size() > 0) {
+                    mDatas.remove(mDatas.size() - 1);
+                    mAdapter.notifyDataSetChanged();
+                }
                 break;
             case R.id.menu_delete_more:
                 if (mDatas.size() > 10) {
-                    for (int i = 0; i < 10; i++) {
-                        mDatas.remove(i);
+                    for (int i = mDatas.size() - 1; i > mDatas.size() - 10 - 1; i--) {
+                        if (i > 0 && i < mDatas.size()) {
+                            mDatas.remove(i);
+                        }
                     }
                 }
                 mAdapter.notifyDataSetChanged();
@@ -226,4 +234,13 @@ public abstract class BaseExampleActivity extends AppCompatActivity implements P
     }
 
 
+    @Override
+    protected void onDestroy() {
+
+
+
+
+
+        super.onDestroy();
+    }
 }

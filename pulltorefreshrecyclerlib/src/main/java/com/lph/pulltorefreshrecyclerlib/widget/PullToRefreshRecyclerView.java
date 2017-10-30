@@ -67,21 +67,25 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         init();
     }
 
+    int mHeaderIndex = 0;
+
     private void initStateView() {
+
+        if (getLayoutManager() instanceof StaggeredGridLayoutManager) {
+            View placeholder = LayoutInflater.from(getContext()).inflate(R.layout.layout_placeholder, this, false);
+            mHeaders.add(mHeaderIndex++, placeholder);
+        }
         mRefreshHeaderView = ((RefreshHeaderView) LayoutInflater.from(getContext()).inflate(R.layout.layout_item_header_def, this, false));
         //创建headerview之后，添加到保存head的容器里面
         if (!mHeaders.contains(mRefreshHeaderView)) {
-            if (mIsRefreshHeaderViewFirst) {
-                mHeaders.add(0, mRefreshHeaderView);
-            } else {
-                //刷新的view应该是放在headerview的最后一个view
-                mHeaders.add(mHeaders.size(), mRefreshHeaderView);
-            }
-
+            //刷新的view应该是放在headerview的最后一个view
+            mHeaders.add(mHeaderIndex++, mRefreshHeaderView);
         }
+
         mLoadMoreFootView = new loadMoreFooterView(getContext());
         mRefreshHeaderView.setOnRefreshListener(this);
     }
+
 
     /**
      * 添加出了刷新之外的头部布局
@@ -89,30 +93,22 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
      *
      * @param view 头部布局
      */
-    public void addHeader(View view, int index) {
+    public void addHeader(View view) {
         //如果刷新的headerview放在了第一个位置,那么别的header事不允许放在第一个位置的,需要往后偏移
-        if (mIsRefreshHeaderViewFirst && index == 0) {
-            index += 1;
+        if (mIsRefreshHeaderViewFirst) {
+            mHeaders.add(mHeaderIndex++, view);
+        } else {
+            mHeaders.add(mHeaderIndex - 1, view);
+            mHeaderIndex++;
         }
-        //如果刷新的headerview放在了第一个位置，那么其余的headerview就不需要拦截recyclerview的ontouchevent中的事件了
-        if (mIsRefreshHeaderViewFirst && view instanceof InterceptOnTouchEventHeaderView) {
-            ((InterceptOnTouchEventHeaderView) view).setShouldIntercept(false);
-        }
-        mHeaders.add(index > mHeaders.size() ? mHeaders.size() : index, view);
         if (mWrapperAdapter != null) {
             mWrapperAdapter.notifyDataSetChanged();
         }
     }
 
     public void removeHeader(int index) {
-        //第一个刷新的header是不允许删除的
-        if (mIsRefreshHeaderViewFirst && index == 0) {
-            return;
-        }
-        if (index >= 0 && index < mHeaders.size()) {
-            mHeaders.remove(index);
-            mWrapperAdapter.notifyDataSetChanged();
-        }
+        mHeaders.remove(resetIndex(index));
+        mWrapperAdapter.notifyDataSetChanged();
     }
 
     private void init() {
@@ -233,8 +229,16 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
 
         @Override
         public int getItemViewType(int position) {
-            if (mInternalAdapter.getItemCount() == 0) {
+         /*   if (mInternalAdapter.getItemCount() == 0 && mHeaders.size() == 1) {
                 return TYPE_EMPTY;
+            }
+*/
+            if (mInternalAdapter.getItemCount() == 0) {
+                if (getLayoutManager() instanceof StaggeredGridLayoutManager && mHeaders.size() == 2) {
+                    return TYPE_EMPTY;
+                } else if (mHeaders.size() == 1) {
+                    return TYPE_EMPTY;
+                }
             }
 
        /*     if (position == 0 && mIsRefreshEnable) {
@@ -348,9 +352,18 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         }
 
         @Override
+        public void onViewDetachedFromWindow(ViewHolder holder) {
+            super.onViewDetachedFromWindow(holder);
+            if (holder.itemView instanceof RefreshHeaderView) {
+
+            }
+        }
+
+        @Override
         public int getItemCount() {
             int count = mInternalAdapter.getItemCount();
-            if (count == 0) return 1; //当展示的内容为空时，需要显示一个空的item
+            if (count == 0)
+                return mHeaders.size() > 1 ? mHeaders.size() : 1; //当展示的内容为空时，需要显示一个空的item
             if (mIsLoadMoreEnable) count++;
 //            if (mIsRefreshEnable) count++;
             count += mHeaders.size(); //加上所有的头view
@@ -413,6 +426,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
         int size = positions.length;
         int minPosition = Integer.MAX_VALUE;
         for (int i = 0; i < size; i++) {
+            Logger.d("getMinPosition" + positions[i]);
             minPosition = Math.min(minPosition, positions[i]);
         }
         return minPosition;
@@ -458,22 +472,27 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             if (mOnItemOperateListenerUser != null) {
                 int position = getChildAdapterPosition(v);
                 if (invalidPosition(position)) return;
-                mOnItemOperateListenerUser.onItemClickListener(v, mIsRefreshEnable ? position - mHeaders.size() : position - mHeaders.size() + 1);
+                mOnItemOperateListenerUser.onItemClickListener(v, getPosition(position));
             }
+        }
+
+        private int getPosition(int position) {
+            position = mIsRefreshEnable ? position - mHeaders.size() : position - mHeaders.size() + 1;
+            return position < 0 ? 0 : position;
         }
 
         @Override
         public boolean onLongClick(View v) {
             if (mOnItemOperateListenerUser != null) {
                 int position = getChildAdapterPosition(v);
-                return !invalidPosition(position) && mOnItemOperateListenerUser.onItemLongClickListener(v, mIsRefreshEnable ? position - mHeaders.size() : position - mHeaders.size() + 1);
+                return !invalidPosition(position) && mOnItemOperateListenerUser.onItemLongClickListener(v, getPosition(position));
             }
             return false;
         }
     };
 
     private boolean invalidPosition(int position) {
-        if (mIsRefreshEnable) {
+        if (mIsRefreshEnable || mHeaders.size() > 1) {
             int itemViewType = mWrapperAdapter.getItemViewType(position);
             if (itemViewType == TYPE_HEADER) {
                 return true;
@@ -485,6 +504,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
                 return true;
             }
         }
+        if (position == -1) return true;
         return mWrapperAdapter.getItemViewType(position) == TYPE_EMPTY;
     }
 
@@ -546,6 +566,16 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
             case MotionEvent.ACTION_MOVE:
                 float deltaY = e.getRawY() - mLastY;
                 Logger.d("shouldrefresh:" + shouldRefresh());
+                //解决当刷新的headerview放在最后的位置时，再其它header区域滑动触发刷新的问题
+                if (!mIsRefreshHeaderViewFirst && mHeaders.size() > 1) {
+                    //获取当前移动的y轴相对于recyclerview的距离
+                    float y = e.getY();
+                    View view = mHeaders.get(mHeaders.size() - 2);
+                    view.getBottom();
+                    if (y < view.getBottom()) {
+                        break;
+                    }
+                }
                 if (shouldRefresh()) {
                     mRefreshHeaderView.updateHeight(deltaY);
                 }
@@ -600,6 +630,7 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
 
     /**
      * 设置刷新的headview显示再recyclerview首个item的位置，还是显示在所有header最后的item位置
+     *
      * @param mIsRefreshHeaderViewFirst
      */
 
@@ -609,5 +640,20 @@ public class PullToRefreshRecyclerView extends RecyclerView implements RefreshHe
 
     public boolean isIsRefreshHeaderViewFirst() {
         return mIsRefreshHeaderViewFirst;
+    }
+
+    private int resetIndex(int initIndex) {
+        if (mIsRefreshHeaderViewFirst) {
+            if (getLayoutManager() instanceof StaggeredGridLayoutManager) {
+                return initIndex + 2;
+            } else {
+                return initIndex + 1;
+            }
+        } else {
+            if (getLayoutManager() instanceof StaggeredGridLayoutManager) {
+                return initIndex + 1;
+            }
+            return initIndex;
+        }
     }
 }
